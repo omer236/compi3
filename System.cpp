@@ -80,25 +80,38 @@ void handleBreakOrContinue(string flag) {
 
 void handleReturn() {
 	System& system = System::get_instance();
-	int function_scope = system.symbol_table.size() - 2;
-	vector <SymbolTableEntry*> fun_def_symbol_table = system.symbol_table[function_scope].scope_symbol_table;
-	int func_location = fun_def_symbol_table.size() - 1;
-	SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(fun_def_symbol_table[func_location]);
-	if (function_entry->type != "VOID") {
-		output::errorMismatch(yylineno);
-		exit(1);
+	vector <SymbolTableEntry*> fun_def_symbol_table = system.symbol_table[system.symbol_table.size() - 2].scope_symbol_table;
+	SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(fun_def_symbol_table[fun_def_symbol_table.size() - 1]);
+	if (function_entry->type == "VOID") {
+	    return;
 	}
+    output::errorMismatch(yylineno);
+    exit(1);
 }
 
 void handleExpReturn(Expression* exp) {
-	string type_of_last_func = returnTypeOfLastFunc();
-	if (type_of_last_func == "VOID") {
+    System& system = System::get_instance();
+    string result = "temp";
+    int index_scope = system.symbol_table.size() - 2;
+    for (int j = index_scope; j >= 0; j--)
+    {
+        int index_entry = system.symbol_table[j].scope_symbol_table.size() - 1;
+        for (int i = index_entry; i >= 0; i--)
+        {
+            if (system.symbol_table[j].scope_symbol_table[i]->is_func)
+            {
+                result = system.symbol_table[j].scope_symbol_table[i]->type;
+                break;
+            }
+        }
+    }
+    if (result == "VOID") {
 		output::errorMismatch(yylineno);
 		exit(1);
 	}
 	string exp_type = find_type(exp);
-	if (type_of_last_func != exp_type) {
-		if (!(type_of_last_func == "INT" && exp_type == "BYTE")) {
+	if (result != exp_type) {
+		if (!(result == "INT" && exp_type == "BYTE")) {
 			output::errorMismatch(yylineno);
 			exit(1);
 		}
@@ -116,24 +129,14 @@ void handleAssign(Expression* id, Expression* exp) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
 	}
-	if (entry->is_const) {
-		output::errorConstMismatch(yylineno);
-		exit(1);
-	}
 	string exp_type = find_type(exp);
-	if (entry->type != exp_type) {
-		if (!(entry->type == "INT" && exp_type == "BYTE")) {
+	if ((entry->type != exp_type) && (entry->type != "INT" || exp_type != "BYTE")) {
 			output::errorMismatch(yylineno);
 			exit(1);
-		}
-	}
+    }
 }
 
 void handleDec(Expression* is_const, Expression* type, Expression* id) {
-	if (is_const->is_const) {
-		output::errorConstDef(yylineno);
-		exit(1);
-	}
 	System& system = System::get_instance();
 	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
 	if (entry != nullptr) {
@@ -150,11 +153,9 @@ void handleDecAndInit(Expression* is_const, Expression* type, Expression* id, Ex
 		exit(1);
 	}
 	string exp_type = find_type(exp);
-	if (type->type != exp_type) {
-		if (!(type->type == "INT" && exp_type == "BYTE")) {
+	if ((type->type != exp_type) && (type->type != "INT" || exp_type != "BYTE")) {
 			output::errorMismatch(yylineno);
 			exit(1);
-		}
 	}
 }
 
