@@ -189,7 +189,6 @@ void addVariableToSymbolTable(Expression* type, Expression* id) {
 }
 void checkIfMainExists() {
     MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntryFunction* main_fun_entry;
     SymbolTableEntry* main_entry = process.getEntryInSymbolTable("main");
     if (main_entry == nullptr) {
         output::errorMainMissing();
@@ -199,7 +198,7 @@ void checkIfMainExists() {
         output::errorMainMissing();
         exit(1);
     }
-    if (dynamic_cast<class SymbolTableEntryFunction*>(main_entry)->arguments_names.size()!=0) {
+    else if (dynamic_cast<class SymbolTableEntryFunction*>(main_entry)->arguments_names.size()!=0) {
         output::errorMainMissing();
         exit(1);
     }
