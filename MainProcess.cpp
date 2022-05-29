@@ -24,13 +24,11 @@ void createGlobalScope() {
     vector<string> print_arguments_types;
     print_arguments_types.push_back("STRING");
     global_scope.addFuncToScope("print", "VOID", print_arguments_names, print_arguments_types);
-
     vector<string> printi_arguments_names;
     printi_arguments_names.push_back("printi_arg_string");
     vector<string> printi_arguments_types;
     printi_arguments_types.push_back("INT");
     global_scope.addFuncToScope("printi", "VOID", printi_arguments_names, printi_arguments_types);
-
     process.offset_stack.push(0);
     process.symbol_table.push_back(global_scope);
 }
@@ -60,7 +58,9 @@ void closeScope() {
             SymbolTableEntryFunction* function = dynamic_cast<class SymbolTableEntryFunction*>(sybmol_table_entry);
             output::printID(function->name, 0, output::makeFunctionType(function->type, function->arguments_types));
         }
-        else {
+    }
+    for (auto const& sybmol_table_entry : scope_symbol_table) {
+        if (!sybmol_table_entry->is_function) {
             output::printID(sybmol_table_entry->name, sybmol_table_entry->offset, sybmol_table_entry->type);
         }
     }
@@ -70,12 +70,12 @@ void closeScope() {
 
 void checkBreakOrContinue(string flag) {
     MainProcess& process = MainProcess::get_instance();
-    Scope current_scope = process.symbol_table[process.symbol_table.size() - 1];
-    if (!current_scope.is_while_scope&&flag == "BREAK") {
+    Scope current = process.symbol_table[process.symbol_table.size() - 1];
+    if (!current.is_while_scope&&flag == "BREAK") {
         output::errorUnexpectedBreak(yylineno);
         exit(1);
     }
-    else if (!current_scope.is_while_scope&&flag == "CONTINUE"){
+    else if (!current.is_while_scope&&flag == "CONTINUE"){
         output::errorUnexpectedContinue(yylineno);
         exit(1);
     }
@@ -83,17 +83,17 @@ void checkBreakOrContinue(string flag) {
 
 void handleAssign(Expression* id, Expression* exp) {
     MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
-    if (entry == nullptr) {
-        output::errorUndef(yylineno, id->name);
-        exit(1);
-    }
-    else if (entry->is_function) {
-        output::errorUndef(yylineno, id->name);
-        exit(1);
-    }
+    SymbolTableEntry* entry_of_id = process.getEntryInSymbolTable(id->name);
     string exp_type = getExpType(exp);
-    if ((entry->type != exp_type) && (entry->type != "INT" || exp_type != "BYTE")) {
+    if (entry_of_id == nullptr) {
+        output::errorUndef(yylineno, id->name);
+        exit(1);
+    }
+    else if (entry_of_id->is_function) {
+        output::errorUndef(yylineno, id->name);
+        exit(1);
+    }
+    else if ((entry_of_id->type != "INT" || exp_type != "BYTE")&&(entry_of_id->type != exp_type)) {
         output::errorMismatch(yylineno);
         exit(1);
     }
@@ -122,15 +122,11 @@ void handleExpReturn(Expression* exp) {
         exit(1);
     }
     string exp_type = getExpType(exp);
-    if (function_type != exp_type) {
-        if (function_type != "INT" || exp_type != "BYTE") {
-            output::errorMismatch(yylineno);
-            exit(1);
-        }
+    if ((function_type != exp_type)&&(function_type != "INT" || exp_type != "BYTE")) {
+        output::errorMismatch(yylineno);
+        exit(1);
     }
 }
-
-
 
 void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression* exp) {
     MainProcess& process = MainProcess::get_instance();
@@ -199,7 +195,7 @@ void checkIfMainExists() {
         output::errorMainMissing();
         exit(1);
     }
-    if (main_entry->type != "VOID") {
+    else if (main_entry->type != "VOID") {
         output::errorMainMissing();
         exit(1);
     }
