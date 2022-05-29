@@ -4,7 +4,7 @@
 using namespace std;
 
 string getExpType(Expression* exp) {
-    if (!(exp->type.empty())) {
+    if (exp->type.size()!=0) {
         return exp->type;
     }
     MainProcess& process = MainProcess::get_instance();
@@ -21,7 +21,7 @@ void checkIfBoolUn(Expression* exp) {
 }
 
 void checkIfBoolBin(Expression* exp1, Expression* exp2) {
-    if(!(getExpType(exp1) == "BOOL" && getExpType(exp2) == "BOOL")) {
+    if(!(getExpType(exp2) == "BOOL"&&getExpType(exp1) == "BOOL")) {
         output::errorMismatch(yylineno);
         exit(1);
     }
@@ -36,7 +36,7 @@ Expression* logicalExpression(Expression* exp1, Expression* exp2) {
     return new Expression("", "BOOL");
 }
 void checkByteSize(int size) {
-    if (size <= 255) {
+    if (size < 256) {
         return;
     }
     output::errorByteTooLarge(yylineno, to_string(size));
@@ -91,14 +91,12 @@ Expression* handleRelop(Expression* expression1, Expression* expression2) {
     return nullptr;
 }
 Expression* handleByte(Expression* expression) {
-    if (stoi(expression->name) <= 255) {
+    if (stoi(expression->name) < 256) {
         return new Expression(expression->name, "BYTE");
     }
     output::errorByteTooLarge(yylineno, expression->name);
     exit(1);
 }
-
-
 
 void handleCall(Expression* id, Expression* args) {
     MainProcess& process = MainProcess::get_instance();
