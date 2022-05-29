@@ -1,18 +1,18 @@
 #include "Expression.h"
-#include "System.h"
+#include "MainProcess.h"
 #include <iostream>
 using namespace std;
 
-string find_type(Expression* exp) {
+string getExpType(Expression* exp) {
 	if (!(exp->type.empty())) {
 		return exp->type;
 	}
-	System& system = System::get_instance();
-	return system.findEntryInSymbolTable(exp->name)->type;
+    MainProcess& process = MainProcess::get_instance();
+	return process.getEntryInSymbolTable(exp->name)->type;
 }
 
-void checkTypeBool(Expression* exp) {
-	string type = find_type(exp);
+void checkIfBoolUn(Expression* exp) {
+	string type = getExpType(exp);
 	if (type == "BOOL") {
 		return;
 	}
@@ -20,8 +20,8 @@ void checkTypeBool(Expression* exp) {
     exit(1);
 }
 
-void checkTypeBool(Expression* exp1, Expression* exp2) {
-	if(!(find_type(exp1) == "BOOL" && find_type(exp2) == "BOOL")) {
+void checkIfBoolBin(Expression* exp1, Expression* exp2) {
+	if(!(getExpType(exp1) == "BOOL" && getExpType(exp2) == "BOOL")) {
 		output::errorMismatch(yylineno);
 		exit(1);
 	}
@@ -35,19 +35,19 @@ void checkByteSize(int size) {
     exit(1);
 }
 
-Expression* handleLogical(Expression* exp1, Expression* exp2) {
+Expression* logicalExpression(Expression* exp1, Expression* exp2) {
 	if (exp2 != nullptr) {
-		checkTypeBool(exp1, exp2);
+        checkIfBoolBin(exp1, exp2);
 	}
 	else {
-		checkTypeBool(exp1);
+        checkIfBoolUn(exp1);
 	}
 	return new Expression("", "BOOL");
 }
 
 Expression* handleBinop(Expression* exp1, Expression* exp2, string op) {
-	string type_exp1 = find_type(exp1);
-	string type_exp2 = find_type(exp2);
+	string type_exp1 = getExpType(exp1);
+	string type_exp2 = getExpType(exp2);
     if (type_exp1 == "BYTE" && type_exp2 == "BYTE") {
         return new Expression("", "BYTE");
     }
@@ -65,8 +65,8 @@ Expression* handleBinop(Expression* exp1, Expression* exp2, string op) {
 }
 
 Expression* handleRelop(Expression* exp1, Expression* exp2) {
-	string type_exp1 = find_type(exp1);
-	string type_exp2 = find_type(exp2);
+	string type_exp1 = getExpType(exp1);
+	string type_exp2 = getExpType(exp2);
 	if ((type_exp1 == "INT" || type_exp1 == "BYTE") && (type_exp2 == "INT" || type_exp2 == "BYTE")) {
 		return new Expression("", "BOOL");
 	}
@@ -93,8 +93,8 @@ Expression* handleCast(string cast_type, Expression* exp) {
 }
 
 void handleCall(Expression* id, Expression* args) {
-	System& system = System::get_instance();
-	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
+    MainProcess& process = MainProcess::get_instance();
+	SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
 	if (entry == nullptr) {
 		output::errorUndefFunc(yylineno, id->name);
 		exit(1);
@@ -133,9 +133,9 @@ void handleCall(Expression* id, Expression* args) {
 	}
 }
 
-void handleID(Expression* id) {
-	System& system = System::get_instance();
-	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
+void checkID(Expression* id) {
+    MainProcess& process = MainProcess::get_instance();
+	SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
 	if (entry == nullptr) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
@@ -146,9 +146,9 @@ void handleID(Expression* id) {
 	}
 }
 
-void checkFuncInSymbolTable(Expression* id) {
-	System& system = System::get_instance();
-	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
+void checkIfFuncAlreadyInSymbolTable(Expression* id) {
+    MainProcess& process = MainProcess::get_instance();
+	SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
 	if (entry == nullptr) {
 		return;
 	}
@@ -156,11 +156,11 @@ void checkFuncInSymbolTable(Expression* id) {
     exit(1);
 }
 
-void addArgInCall(Expression* exp, Expression* arg)
+void addArgToFunction(Expression* exp, Expression* arg)
 {
 	ExpressionFunction* function_entry = dynamic_cast<class ExpressionFunction*>(exp);
 	function_entry->args_name.push_back(arg->name);
-	string type = find_type(arg);
+	string type = getExpType(arg);
 	function_entry->args_type.push_back(type);
 }
 
@@ -168,7 +168,6 @@ void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
 
 	ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
 
-	//if this arg name already exists for this func, error. 
 	if (find(function_args_list->args_name.begin(), function_args_list->args_name.end(), new_arg->name) != function_args_list->args_name.end()) {
 		output::errorDef(yylineno, new_arg->name);
 		exit(0);

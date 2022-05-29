@@ -23,20 +23,20 @@ public:
 
 #define YYSTYPE Expression*
 
-void checkTypeBool(Expression* exp);
-void checkTypeBool(Expression* exp1, Expression* exp2);
+void checkIfBoolBin(Expression* exp1, Expression* exp2);
+void checkIfBoolUn(Expression* exp);
 void checkByteSize(int size);
-Expression* handleLogical(Expression* exp1, Expression* exp2 = nullptr);
+Expression* logicalExpression(Expression* exp1, Expression* exp2 = nullptr);
 Expression* handleBinop(Expression* exp1, Expression* exp2, string op);
 Expression* handleRelop(Expression* exp1, Expression* exp2);
 Expression* handleByte(Expression* exp);
 Expression* handleCast(string cast_type, Expression* exp);
 void handleCall(Expression* id, Expression* args = nullptr);
-void handleID(Expression* id);
-void checkFuncInSymbolTable(Expression* id);
-void addArgInCall(Expression* exp, Expression* arg);
+void checkID(Expression* id);
+void checkIfFuncAlreadyInSymbolTable(Expression* id);
+void addArgToFunction(Expression* exp, Expression* arg);
 void addArgInDeclaration(Expression* exp, Expression* arg);
-string find_type(Expression* exp);
+string getExpType(Expression* exp);
 
 class ExpressionFunction : public Expression {
 public:
@@ -50,7 +50,7 @@ public:
 	ExpressionFunction(const string name, const string type, bool is_func): Expression(name, type, is_func), args_name(), args_type(){}
 	ExpressionFunction(Expression* exp) : Expression() {
 		args_name.push_back(exp->name);
-		string type = find_type(exp);
+		string type = getExpType(exp);
 		args_type.push_back(type);
 	}
 	~ExpressionFunction() override = default;

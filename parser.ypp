@@ -1,6 +1,6 @@
 %{
 	#include "Expression.h"
-	#include "System.h"
+	#include "MainProcess.h"
 	#include "hw3_output.hpp"
 	#include <iostream>
 	void yyerror(const char* );
@@ -26,13 +26,13 @@
 
 %%
 
-Program: {openGlobalScope();} Funcs {closeScope();}
+Program: {createGlobalScope();} Funcs {closeScope();}
 
-Funcs: /*Epsilon*/ {checkIfMain();}
+Funcs: /*Epsilon*/ {checkIfMainExists();}
 	   | FuncDecl Funcs {}
 
-FuncDecl: RetType ID {checkFuncInSymbolTable($2);} LPAREN Formals {insertFuncToSymbolTable($1,$2,$5);} 
-			RPAREN {openScope(); insertArgsToSymbolTable($5);} LBRACE 
+FuncDecl: RetType ID {checkIfFuncAlreadyInSymbolTable($2);} LPAREN Formals {addFunctionEntryToSymbolTable($1,$2,$5);}
+			RPAREN {openScope(); addArgumentsToSymbolTable($5);} LBRACE
 			Statements RBRACE {closeScope();}
 
 RetType: Type {$$ = $1; }
@@ -50,51 +50,49 @@ FormalsDecl: Type ID {$$ = new Expression($2->name, $1->type, 0);}
 Statements: Statement {}
 			| Statements Statement  {}
 
-Statement: LBRACE {bool flag = checkIfInWhile(); openScope(flag);} Statements RBRACE {closeScope();}
-			| Type ID SC {handleDec($1, $2); insertVarToSymbolTable($1, $2);}
-			| Type ID ASSIGN Exp SC {handleDecAndInit($1, $2, $4); insertVarToSymbolTable($1, $2);}
+Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {closeScope();}
+			| Type ID SC {handleDeclaration($1, $2); addVariableToSymbolTable($1, $2);}
+			| Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);}
 			| ID ASSIGN Exp SC {handleAssign($1, $3);}
 			| Call SC {}
-			| RETURN SC {handleReturn();}
+			| RETURN SC {handleReturnVoid();}
 			| RETURN Exp SC {handleExpReturn($2);}
 			| IF LPAREN M1 Exp M2 RPAREN Statement M3 %prec IF {}
 			| IF LPAREN M1 Exp M2 RPAREN Statement M3 ELSE {openScope();} Statement {closeScope();}
-			| WHILE {openScope(1);} LPAREN Exp {checkTypeBool($4);} RPAREN Statement {closeScope();}
-			| BREAK SC {handleBreakOrContinue("BREAK");}
-			| CONTINUE SC {handleBreakOrContinue("CONTINUE");}
+			| WHILE {openScope(1);} LPAREN Exp {logicalExpression($4);} RPAREN Statement {closeScope();}
+			| BREAK SC {checkBreakOrContinue("BREAK");}
+			| CONTINUE SC {checkBreakOrContinue("CONTINUE");}
 
-M1: /*Epsilon*/ {bool flag = checkIfInWhile(); openScope(flag);}
+M1: /*Epsilon*/ {bool flag = isWhile(); openScope(flag);}
 
-M2: /*Epsilon*/ {checkTypeBool($0);}
+M2: /*Epsilon*/ {logicalExpression($0);}
 
 M3: /*Epsilon*/ {closeScope();}
 
 Call: ID LPAREN ExpList RPAREN {handleCall($1, $3); $$ = $1;}
 			| ID LPAREN RPAREN {handleCall($1); $$ = $1;}
 
-/* Create ExpressionFunction without name and type, contains only args name & types */
 ExpList: Exp {$$ = new ExpressionFunction($1);}
-			| Exp COMMA ExpList {addArgInCall($3, $1); $$=$3;}
+			| Exp COMMA ExpList {addArgToFunction($3, $1); $$=$3;}
 
 Type: INT {$$ = new Expression("", "INT");}
 		| BYTE {$$ = new Expression("", "BYTE");}
 		| BOOL {$$ = new Expression("", "BOOL"); }
 		| error {} /*ASAF ADDED THIS*/
 
-
 Exp: LPAREN Exp RPAREN {$$ = $2;}
 	| Exp PLUSMINUS Exp {$$ = handleBinop($1, $3, "-");}
 	| Exp MULTDIV Exp {$$ = handleBinop($1, $3, "*");}
-	| ID {handleID($1); $$ = $1;}
+	| ID {checkID($1); $$ = $1;}
 	| Call {$$ = $1;}
 	| NUM {$$ = $1;}
 	| NUM B {$$ = handleByte($1);}
 	| STRING {$$ = $1;}
 	| TRUE {$$ = $1;}
 	| FALSE {$$ = $1;}
-	| NOT Exp { $$ = handleLogical($2);}
-	| Exp AND Exp {$$ = handleLogical($1,$3);}
-	| Exp OR Exp {$$ = handleLogical($1,$3);}
+	| NOT Exp { $$ = logicalExpression($2);}
+	| Exp AND Exp {$$ = logicalExpression($1,$3);}
+	| Exp OR Exp {$$ = logicalExpression($1,$3);}
 	| Exp RELOP Exp {$$ = handleRelop($1,$3);}
 	| Exp EQUAL Exp {$$ = handleRelop($1,$3);}
 	| LPAREN Type RPAREN Exp {$$ = handleCast($2->type,$4);}
