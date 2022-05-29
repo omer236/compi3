@@ -23,17 +23,13 @@ void openGlobalScope() {
 	print_args_name.push_back("print_arg_string");
 	vector<string> print_args_type;
 	print_args_type.push_back("STRING");
-	vector<bool> print_args_is_const;
-	print_args_is_const.push_back(true);
-	global_scope.addFuncToScope("print", "VOID", print_args_name, print_args_type, print_args_is_const);
+	global_scope.addFuncToScope("print", "VOID", print_args_name, print_args_type);
 
 	vector<string> printi_args_name;
 	print_args_name.push_back("printi_arg_string");
 	vector<string> printi_args_type;
 	printi_args_type.push_back("INT");
-	vector<bool> printi_args_is_const;
-	printi_args_is_const.push_back(false);
-	global_scope.addFuncToScope("printi", "VOID", printi_args_name, printi_args_type, printi_args_is_const);
+	global_scope.addFuncToScope("printi", "VOID", printi_args_name, printi_args_type);
 
 	system.offset_stack.push(0);
 	system.symbol_table.push_back(global_scope);
@@ -136,16 +132,17 @@ void handleAssign(Expression* id, Expression* exp) {
     }
 }
 
-void handleDec(Expression* is_const, Expression* type, Expression* id) {
+void handleDec(Expression* type, Expression* id) {
 	System& system = System::get_instance();
 	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
-	if (entry != nullptr) {
-		output::errorDef(yylineno, id->name);
-		exit(1);
+	if (entry == nullptr) {
+		return;
 	}
+    output::errorDef(yylineno, id->name);
+    exit(1);
 }
 
-void handleDecAndInit(Expression* is_const, Expression* type, Expression* id, Expression* exp) {
+void handleDecAndInit(Expression* type, Expression* id, Expression* exp) {
 	System& system = System::get_instance();
 	SymbolTableEntry* entry = system.findEntryInSymbolTable(id->name);
 	if (entry != nullptr) {
@@ -184,15 +181,13 @@ void insertFuncToSymbolTable(Expression* ret_type, Expression* id, Expression* a
 		ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
 		reverse(args_list->args_name.begin(), args_list->args_name.end());
 		reverse(args_list->args_type.begin(), args_list->args_type.end());
-		reverse(args_list->args_is_const.begin(), args_list->args_is_const.end());
 
-		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type, args_list->args_name, args_list->args_type, args_list->args_is_const);
+		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type, args_list->args_name, args_list->args_type);
 	}
 	else {
 		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type);
 	}
-	int size = system.symbol_table.size() - 1;
-	system.symbol_table[size].scope_symbol_table.push_back(function_entry);
+	system.symbol_table[system.symbol_table.size() - 1].scope_symbol_table.push_back(function_entry);
 }
 
 void insertArgsToSymbolTable(Expression* args) {
@@ -201,49 +196,25 @@ void insertArgsToSymbolTable(Expression* args) {
 		ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
 		int offset = -1;
 		int num_of_args = args_list->args_name.size();
-		int scope_symbol_table_size = system.symbol_table.size() - 1;
 		for (int i = 0; i < num_of_args; i++) {
-			SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->args_name[i], args_list->args_type[i], offset, args_list->args_is_const[i], false);
-			system.symbol_table[scope_symbol_table_size].scope_symbol_table.push_back(current_entry);
+			SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->args_name[i], args_list->args_type[i], offset, false);
+			system.symbol_table[system.symbol_table.size() - 1].scope_symbol_table.push_back(current_entry);
 			offset--;
 		}
 	}
 }
 
-void insertVarToSymbolTable(Expression* is_const, Expression* type, Expression* id) {
+void insertVarToSymbolTable(Expression* type, Expression* id) {
 	System& system = System::get_instance();
-	// create new entry in symbol table with top of offset stack
-	SymbolTableEntry* var_entry = new SymbolTableEntry(id->name, type->type, system.offset_stack.top(), is_const->is_const, false);
-	// update new top of offset stack
+	int offset = system.offset_stack.top();
+	SymbolTableEntry* var_entry = new SymbolTableEntry(id->name, type->type, offset, false);
 	int new_top = system.offset_stack.top() + 1;
 	system.offset_stack.pop();
 	system.offset_stack.push(new_top);
-	// insert to symbol table
-	int size = system.symbol_table.size() - 1;
-	system.symbol_table[size].scope_symbol_table.push_back(var_entry);
+	system.symbol_table[system.symbol_table.size() - 1].scope_symbol_table.push_back(var_entry);
 }
 
 bool checkIfInWhile() {
 	System& system = System::get_instance();
 	return system.symbol_table.back().is_while_scope;
-}
-
-string returnTypeOfLastFunc()
-{
-	System& system = System::get_instance();
-	string result;
-	int index_scope = system.symbol_table.size() - 2;
-	for (int j = index_scope; j >= 0; j--)
-	{
-		int index_entry = system.symbol_table[j].scope_symbol_table.size() - 1;
-		for (int i = index_entry; i >= 0; i--)
-		{
-			if (system.symbol_table[j].scope_symbol_table[i]->is_func)
-			{
-				result = system.symbol_table[j].scope_symbol_table[i]->type;
-				return result;
-			}
-		}
-	}
-	return "DIDNT FIND"; 
 }

@@ -27,12 +27,12 @@ void handleBreakOrContinue(std::string flag);
 void handleReturn();
 void handleExpReturn(Expression* exp);
 void handleAssign(Expression* id, Expression* exp);
-void handleDec(Expression* is_const, Expression* type, Expression* id);
-void handleDecAndInit(Expression* is_const, Expression* type, Expression* id, Expression* exp);
+void handleDec(Expression* type, Expression* id);
+void handleDecAndInit(Expression* type, Expression* id, Expression* exp);
 void checkIfMain();
 void insertFuncToSymbolTable(Expression* ret_type, Expression* id, Expression* args);
 void insertArgsToSymbolTable(Expression* args);
-void insertVarToSymbolTable(Expression* is_const, Expression* type, Expression* id);
+void insertVarToSymbolTable(Expression* type, Expression* id);
 bool checkIfInWhile();
 std::string returnTypeOfLastFunc();
 

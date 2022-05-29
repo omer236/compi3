@@ -41,18 +41,18 @@ RetType: Type {$$ = $1; }
 Formals:  /*Epsilon*/ { $$ = nullptr; }
 		| FormalsList {$$=$1;} 
 
-FormalsList: FormalsDecl {$$ = new ExpressionFunction($1->name,$1->type,$1->is_const);}
+FormalsList: FormalsDecl {$$ = new ExpressionFunction($1->name,$1->type);}
 			| FormalsDecl COMMA FormalsList {addArgInDeclaration($3, $1); $$=$3;}
 
-FormalsDecl: TypeAnnotation Type ID {$$ = new Expression($3->name, $2->type, $1->is_const, 0);}
+FormalsDecl: Type ID {$$ = new Expression($2->name, $1->type, 0);}
 
 
 Statements: Statement {}
 			| Statements Statement  {}
 
 Statement: LBRACE {bool flag = checkIfInWhile(); openScope(flag);} Statements RBRACE {closeScope();}
-			| TypeAnnotation Type ID SC {handleDec($1, $2, $3); insertVarToSymbolTable($1, $2, $3);}
-			| TypeAnnotation Type ID ASSIGN Exp SC {handleDecAndInit($1, $2, $3, $5); insertVarToSymbolTable($1, $2, $3);}
+			| Type ID SC {handleDec($1, $2); insertVarToSymbolTable($1, $2);}
+			| Type ID ASSIGN Exp SC {handleDecAndInit($1, $2, $4); insertVarToSymbolTable($1, $2);}
 			| ID ASSIGN Exp SC {handleAssign($1, $3);}
 			| Call SC {}
 			| RETURN SC {handleReturn();}
@@ -81,8 +81,6 @@ Type: INT {$$ = new Expression("", "INT");}
 		| BOOL {$$ = new Expression("", "BOOL"); }
 		| error {} /*ASAF ADDED THIS*/
 
-TypeAnnotation:  /*Epsilon*/ {$$ = new Expression();}
-				| AUTO {$$ = new Expression(true);}
 
 Exp: LPAREN Exp RPAREN {$$ = $2;}
 	| Exp PLUSMINUS Exp {$$ = handleBinop($1, $3, "-");}
