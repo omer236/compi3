@@ -32,17 +32,17 @@ void createGlobalScope() {
     process.symbol_table.push_back(global_scope);
 }
 
-void openScope(bool is_while) {
+void openScope(bool if_while) {
     MainProcess& process = MainProcess::get_instance();
-    Scope scope(is_while);
+    Scope scope(if_while);
     process.symbol_table.push_back(scope);
     process.offset_stack.push(process.offset_stack.top());
 }
 void handleReturnVoid() {
     MainProcess& process = MainProcess::get_instance();
-    vector <SymbolTableEntry*> fun_def_symbol_table = process.symbol_table[process.symbol_table.size() - 2].scope_symbol_table;
-    SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(fun_def_symbol_table[fun_def_symbol_table.size() - 1]);
-    if (function_entry->type == "VOID") {
+    vector <SymbolTableEntry*> function_definition = process.symbol_table[process.symbol_table.size() - 2].scope_symbol_table;
+    SymbolTableEntryFunction* entry = dynamic_cast<class SymbolTableEntryFunction*>(function_definition[function_definition.size() - 1]);
+    if (entry->type == "VOID") {
         return;
     }
     output::errorMismatch(yylineno);

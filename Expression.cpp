@@ -112,10 +112,10 @@ void handleCall(Expression* id, Expression* args) {
         exit(1);
     }
     SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(entry);
-    int number_of_args = function_entry->arguments_types.size();
+    int num_arguments = function_entry->arguments_types.size();
     if (args != nullptr) {
         ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-        if (args_list->arguments_names.size() != number_of_args) {
+        if (args_list->arguments_names.size() != num_arguments) {
             output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
             exit(1);
         }
@@ -123,7 +123,7 @@ void handleCall(Expression* id, Expression* args) {
         reverse(args_list->arguments_names.begin(), args_list->arguments_names.end());
         reverse(args_list->arguments_types.begin(), args_list->arguments_types.end());
 
-        for (int i = 0; i < number_of_args; i++) {
+        for (int i = 0; i < num_arguments; i++) {
             if (function_entry->arguments_types[i] != args_list->arguments_types[i])
             {
                 if((function_entry->arguments_types[i] == "INT") && (args_list->arguments_types[i] == "BYTE"))
@@ -135,7 +135,7 @@ void handleCall(Expression* id, Expression* args) {
             }
         }
     }
-    if (args == nullptr && number_of_args != 0) {
+    if (args == nullptr && num_arguments != 0) {
         output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
         exit(1);
     }
