@@ -9,25 +9,25 @@ using namespace std;
 
 class SymbolTableEntry {
 public:
-	int offset;
 	string name;
 	string type;
-	bool is_func = false;
+	int offset;
+	bool is_function = false;
 	virtual ~SymbolTableEntry() = default;
 
 	SymbolTableEntry(std::string name, std::string type, int offset, bool is_func) :
-		name(name), type(type), offset(offset), is_func(is_func) {}
+		name(name), type(type), offset(offset), is_function(is_func) {}
 };
 
 class SymbolTableEntryFunction : public SymbolTableEntry {
 public:
-	std::vector<std::string> args_name;
-	std::vector<std::string> args_type;
+	vector<string> arguments_names;
+	vector<string> arguments_types;
 
 	SymbolTableEntryFunction() = default;
-	SymbolTableEntryFunction(const string name, const string type) : SymbolTableEntry(name, type, 0, true), args_name(), args_type() {}
+	SymbolTableEntryFunction(const string name, const string type) : SymbolTableEntry(name, type, 0, true), arguments_names(), arguments_types() {}
 	SymbolTableEntryFunction(const string name, const string type, vector<string> args_name, vector<string> args_type) :
-	                        SymbolTableEntry(name, type, 0, true), args_name(args_name), args_type(args_type) {}
+	                        SymbolTableEntry(name, type, 0, true), arguments_names(args_name), arguments_types(args_type) {}
 
 	~SymbolTableEntryFunction() override = default;
 };
