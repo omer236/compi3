@@ -26,15 +26,6 @@ void checkIfBoolBin(Expression* exp1, Expression* exp2) {
         exit(1);
     }
 }
-
-void checkByteSize(int size) {
-    if (size <= 255) {
-        return;
-    }
-    output::errorByteTooLarge(yylineno, to_string(size));
-    exit(1);
-}
-
 Expression* logicalExpression(Expression* exp1, Expression* exp2) {
     if (exp2 != nullptr) {
         checkIfBoolBin(exp1, exp2);
@@ -44,17 +35,34 @@ Expression* logicalExpression(Expression* exp1, Expression* exp2) {
     }
     return new Expression("", "BOOL");
 }
+void checkByteSize(int size) {
+    if (size <= 255) {
+        return;
+    }
+    output::errorByteTooLarge(yylineno, to_string(size));
+    exit(1);
+}
+
+void checkIfFuncAlreadyInSymbolTable(Expression* id) {
+    MainProcess& process = MainProcess::get_instance();
+    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
+    if (entry == nullptr) {
+        return;
+    }
+    output::errorDef(yylineno, id->name);
+    exit(1);
+}
 
 Expression* handleBinop(Expression* exp1, Expression* exp2) {
-    string type_exp1 = getExpType(exp1);
-    string type_exp2 = getExpType(exp2);
-    if (type_exp1 == "BYTE" && type_exp2 == "BYTE") {
+    string expression_type = getExpType(exp1);
+    string expression_type1 = getExpType(exp2);
+    if (expression_type == "BYTE" && expression_type1 == "BYTE") {
         return new Expression("", "BYTE");
     }
-    else if (type_exp1 == "BYTE" && type_exp2 == "INT") {
+    else if ((expression_type == "INT") && (expression_type1 == "INT" || expression_type1 == "BYTE")) {
         return new Expression("", "INT");
     }
-    else if ((type_exp1 == "INT") && (type_exp2 == "INT" || type_exp2 == "BYTE")) {
+    else if (expression_type == "BYTE" && expression_type1 == "INT") {
         return new Expression("", "INT");
     }
     else {
@@ -64,10 +72,16 @@ Expression* handleBinop(Expression* exp1, Expression* exp2) {
     return nullptr;
 }
 
-Expression* handleRelop(Expression* exp1, Expression* exp2) {
-    string type_exp1 = getExpType(exp1);
-    string type_exp2 = getExpType(exp2);
-    if ((type_exp1 == "INT" || type_exp1 == "BYTE") && (type_exp2 == "INT" || type_exp2 == "BYTE")) {
+Expression* handleCast(string cast_type, Expression* expression) {
+    if (cast_type == "BYTE") {
+        checkByteSize(stoi(expression->name));
+    }
+    return new Expression(expression->name, cast_type);
+}
+Expression* handleRelop(Expression* expression1, Expression* expression2) {
+    string expression_type = getExpType(expression1);
+    string expression_type1 = getExpType(expression2);
+    if ((expression_type == "INT" || expression_type == "BYTE") && (expression_type1 == "BYTE"||expression_type1 == "INT" )) {
         return new Expression("", "BOOL");
     }
     else {
@@ -76,21 +90,15 @@ Expression* handleRelop(Expression* exp1, Expression* exp2) {
     }
     return nullptr;
 }
-
-Expression* handleByte(Expression* exp) {
-    if (stoi(exp->name) <= 255) {
-        return new Expression(exp->name, "BYTE");
+Expression* handleByte(Expression* expression) {
+    if (stoi(expression->name) <= 255) {
+        return new Expression(expression->name, "BYTE");
     }
-    output::errorByteTooLarge(yylineno, exp->name);
+    output::errorByteTooLarge(yylineno, expression->name);
     exit(1);
 }
 
-Expression* handleCast(string cast_type, Expression* exp) {
-    if (cast_type == "BYTE") {
-        checkByteSize(stoi(exp->name));
-    }
-    return new Expression(exp->name, cast_type);
-}
+
 
 void handleCall(Expression* id, Expression* args) {
     MainProcess& process = MainProcess::get_instance();
@@ -146,14 +154,14 @@ void checkID(Expression* id) {
     }
 }
 
-void checkIfFuncAlreadyInSymbolTable(Expression* id) {
-    MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
-    if (entry == nullptr) {
-        return;
+void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
+    ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
+    if (find(function_args_list->arguments_names.begin(), function_args_list->arguments_names.end(), new_arg->name) != function_args_list->arguments_names.end()) {
+        output::errorDef(yylineno, new_arg->name);
+        exit(0);
     }
-    output::errorDef(yylineno, id->name);
-    exit(1);
+    function_args_list->arguments_types.push_back(new_arg->type);
+    function_args_list->arguments_names.push_back(new_arg->name);
 }
 
 void addArgToFunction(Expression* exp, Expression* arg)
@@ -164,14 +172,4 @@ void addArgToFunction(Expression* exp, Expression* arg)
     function_entry->arguments_types.push_back(type);
 }
 
-void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
 
-    ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
-
-    if (find(function_args_list->arguments_names.begin(), function_args_list->arguments_names.end(), new_arg->name) != function_args_list->arguments_names.end()) {
-        output::errorDef(yylineno, new_arg->name);
-        exit(0);
-    }
-    function_args_list->arguments_types.push_back(new_arg->type);
-    function_args_list->arguments_names.push_back(new_arg->name);
-}

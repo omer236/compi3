@@ -25,17 +25,17 @@ public:
 
 void checkIfBoolBin(Expression* exp1, Expression* exp2);
 void checkIfBoolUn(Expression* exp);
-void checkByteSize(int size);
 Expression* logicalExpression(Expression* exp1, Expression* exp2 = nullptr);
+void checkByteSize(int size);
+void checkIfFuncAlreadyInSymbolTable(Expression* id);
 Expression* handleBinop(Expression* exp1, Expression* exp2);
+Expression* handleCast(string cast_type, Expression* exp);
 Expression* handleRelop(Expression* exp1, Expression* exp2);
 Expression* handleByte(Expression* exp);
-Expression* handleCast(string cast_type, Expression* exp);
 void handleCall(Expression* id, Expression* args = nullptr);
 void checkID(Expression* id);
-void checkIfFuncAlreadyInSymbolTable(Expression* id);
-void addArgToFunction(Expression* exp, Expression* arg);
 void addArgInDeclaration(Expression* exp, Expression* arg);
+void addArgToFunction(Expression* exp, Expression* arg);
 string getExpType(Expression* exp);
 
 class ExpressionFunction : public Expression {

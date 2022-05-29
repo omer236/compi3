@@ -74,7 +74,7 @@ void checkBreakOrContinue(string flag) {
         output::errorUnexpectedBreak(yylineno);
         exit(1);
     }
-    else if (!current.is_while_scope&&flag == "CONTINUE"){
+    else if (!current.is_while_scope && flag == "CONTINUE"){
         output::errorUnexpectedContinue(yylineno);
         exit(1);
     }
@@ -180,11 +180,12 @@ bool isWhile() {
     return process.symbol_table.back().is_while_scope;
 }
 void addVariableToSymbolTable(Expression* type, Expression* id) {
+    int offset_new;
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* var_entry = new SymbolTableEntry(id->name, type->type, process.offset_stack.top(), false);
-    int new_top = process.offset_stack.top() + 1;
+    offset_new = process.offset_stack.top() + 1;
     process.offset_stack.pop();
-    process.offset_stack.push(new_top);
+    process.offset_stack.push(offset_new);
     process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(var_entry);
 }
 void checkIfMainExists() {
