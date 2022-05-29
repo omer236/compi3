@@ -35,25 +35,26 @@ FuncDecl: RetType ID {checkIfFuncAlreadyInSymbolTable($2);} LPAREN Formals {addF
 			RPAREN {openScope(); addArgumentsToSymbolTable($5);} LBRACE
 			Statements RBRACE {closeScope();}
 
-RetType: Type {$$ = $1; }
+RetType: Type {$$ = $1;}
 		| VOID {$$ = new Expression("","VOID");}
 
 Formals:  /*Epsilon*/ { $$ = nullptr; }
-		| FormalsList {$$=$1;} 
+		| FormalsList {$$=$1;}
 
-FormalsList: FormalsDecl {$$ = new ExpressionFunction($1->name,$1->type);}
-			| FormalsDecl COMMA FormalsList {addArgInDeclaration($3, $1); $$=$3;}
+FormalsList: FormalDecl {$$ = new ExpressionFunction($1->name,$1->type);}
+			| FormalDecl COMMA FormalsList {addArgInDeclaration($3, $1); $$=$3;}
 
-FormalsDecl: Type ID {$$ = new Expression($2->name, $1->type, 0);}
+FormalDecl: Type ID {$$ = new Expression($2->name, $1->type);}
 
 
 Statements: Statement {}
 			| Statements Statement  {}
 
 Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {closeScope();}
-			| Type ID SC {handleDeclaration($1, $2); addVariableToSymbolTable($1, $2);}
+			| Type ID SC {handleDeclaration($2); addVariableToSymbolTable($1, $2);}
 			| Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);}
 			| ID ASSIGN Exp SC {handleAssign($1, $3);}
+			| AUTO ID ASSIGN Exp SC {handleDeclarationAndInitiation($4, $2, $4);}
 			| Call SC {}
 			| RETURN SC {handleReturnVoid();}
 			| RETURN Exp SC {handleExpReturn($2);}
@@ -78,11 +79,11 @@ ExpList: Exp {$$ = new ExpressionFunction($1);}
 Type: INT {$$ = new Expression("", "INT");}
 		| BYTE {$$ = new Expression("", "BYTE");}
 		| BOOL {$$ = new Expression("", "BOOL"); }
-		| error {} /*ASAF ADDED THIS*/
+		| error {}
 
 Exp: LPAREN Exp RPAREN {$$ = $2;}
-	| Exp PLUSMINUS Exp {$$ = handleBinop($1, $3, "-");}
-	| Exp MULTDIV Exp {$$ = handleBinop($1, $3, "*");}
+	| Exp PLUSMINUS Exp {$$ = handleBinop($1, $3);}
+	| Exp MULTDIV Exp {$$ = handleBinop($1, $3);}
 	| ID {checkID($1); $$ = $1;}
 	| Call {$$ = $1;}
 	| NUM {$$ = $1;}

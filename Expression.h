@@ -27,7 +27,7 @@ void checkIfBoolBin(Expression* exp1, Expression* exp2);
 void checkIfBoolUn(Expression* exp);
 void checkByteSize(int size);
 Expression* logicalExpression(Expression* exp1, Expression* exp2 = nullptr);
-Expression* handleBinop(Expression* exp1, Expression* exp2, string op);
+Expression* handleBinop(Expression* exp1, Expression* exp2);
 Expression* handleRelop(Expression* exp1, Expression* exp2);
 Expression* handleByte(Expression* exp);
 Expression* handleCast(string cast_type, Expression* exp);

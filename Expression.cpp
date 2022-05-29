@@ -45,7 +45,7 @@ Expression* logicalExpression(Expression* exp1, Expression* exp2) {
 	return new Expression("", "BOOL");
 }
 
-Expression* handleBinop(Expression* exp1, Expression* exp2, string op) {
+Expression* handleBinop(Expression* exp1, Expression* exp2) {
 	string type_exp1 = getExpType(exp1);
 	string type_exp2 = getExpType(exp2);
     if (type_exp1 == "BYTE" && type_exp2 == "BYTE") {

@@ -11,13 +11,13 @@ using namespace std;
 
 class MainProcess {
 public:
-	vector<Scope> symbol_table;
-	stack<int> offset_stack;
-	static MainProcess& get_instance() {
-		static MainProcess instance;
-		return instance;
-	}
-	SymbolTableEntry* getEntryInSymbolTable(string entry_name);
+    vector<Scope> symbol_table;
+    stack<int> offset_stack;
+    static MainProcess& get_instance() {
+        static MainProcess instance;
+        return instance;
+    }
+    SymbolTableEntry* getEntryInSymbolTable(string entry_name);
 };
 
 void createGlobalScope();
@@ -27,7 +27,7 @@ void checkBreakOrContinue(string flag);
 void handleReturnVoid();
 void handleExpReturn(Expression* exp);
 void handleAssign(Expression* id, Expression* exp);
-void handleDeclaration(Expression* type, Expression* id);
+void handleDeclaration(Expression* id);
 void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression* exp);
 void checkIfMainExists();
 void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Expression* args);
