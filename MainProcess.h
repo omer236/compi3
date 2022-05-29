@@ -22,18 +22,18 @@ public:
 
 void createGlobalScope();
 void openScope(bool is_while = false);
+void handleReturnVoid();
 void closeScope();
 void checkBreakOrContinue(string flag);
-void handleReturnVoid();
-void handleExpReturn(Expression* exp);
 void handleAssign(Expression* id, Expression* exp);
-void handleDeclaration(Expression* id);
+void handleExpReturn(Expression* exp);
 void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression* exp);
-void checkIfMainExists();
+void handleDeclaration(Expression* id);
 void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Expression* args);
 void addArgumentsToSymbolTable(Expression* args);
-void addVariableToSymbolTable(Expression* type, Expression* id);
 bool isWhile();
+void addVariableToSymbolTable(Expression* type, Expression* id);
+void checkIfMainExists();
 std::string returnTypeOfLastFunc();
 
 #endif
