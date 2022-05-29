@@ -6,6 +6,7 @@
 	void yyerror(const char* );
 	int yylex();
 	using namespace output;
+	void handleAuto(Expression* id, Expression* exp);
 	#define YYSTYPE Expression*
 %}
 
@@ -54,7 +55,7 @@ Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {c
 			| Type ID SC {handleDeclaration($2); addVariableToSymbolTable($1, $2);}
 			| Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);}
 			| ID ASSIGN Exp SC {handleAssign($1, $3);}
-			| AUTO ID ASSIGN Exp SC {handleDeclarationAndInitiation($4, $2, $4);}
+			| AUTO ID ASSIGN Exp SC {handleAuto($2, $4); handleDeclarationAndInitiation($4, $2, $4);addVariableToSymbolTable($4, $2);}
 			| Call SC {}
 			| RETURN SC {handleReturnVoid();}
 			| RETURN Exp SC {handleExpReturn($2);}
@@ -76,27 +77,27 @@ Call: ID LPAREN ExpList RPAREN {handleCall($1, $3); $$ = $1;}
 ExpList: Exp {$$ = new ExpressionFunction($1);}
 			| Exp COMMA ExpList {addArgToFunction($3, $1); $$=$3;}
 
-Type: INT {$$ = new Expression("", "INT");}
-		| BYTE {$$ = new Expression("", "BYTE");}
-		| BOOL {$$ = new Expression("", "BOOL"); }
-		| error {}
+Type: INT {$$ = new Expression("", "INT");};
+Type: BYTE {$$ = new Expression("", "BYTE");};
+Type: BOOL {$$ = new Expression("", "BOOL"); };
+Type: error {}
 
-Exp: LPAREN Exp RPAREN {$$ = $2;}
-	| Exp PLUSMINUS Exp {$$ = handleBinop($1, $3);}
-	| Exp MULTDIV Exp {$$ = handleBinop($1, $3);}
-	| ID {checkID($1); $$ = $1;}
-	| Call {$$ = $1;}
-	| NUM {$$ = $1;}
-	| NUM B {$$ = handleByte($1);}
-	| STRING {$$ = $1;}
-	| TRUE {$$ = $1;}
-	| FALSE {$$ = $1;}
-	| NOT Exp { $$ = logicalExpression($2);}
-	| Exp AND Exp {$$ = logicalExpression($1,$3);}
-	| Exp OR Exp {$$ = logicalExpression($1,$3);}
-	| Exp RELOP Exp {$$ = handleRelop($1,$3);}
-	| Exp EQUAL Exp {$$ = handleRelop($1,$3);}
-	| LPAREN Type RPAREN Exp {$$ = handleCast($2->type,$4);}
+Exp: LPAREN Exp RPAREN {$$ = $2;};
+Exp: Exp PLUSMINUS Exp {$$ = handleBinop($1, $3);};
+Exp: Exp MULTDIV Exp {$$ = handleBinop($1, $3);};
+Exp: ID {checkID($1); $$ = $1;};
+Exp:  Call {$$ = $1;};
+Exp: NUM {$$ = $1;};
+Exp: NUM B {$$ = handleByte($1);};
+Exp: STRING {$$ = $1;};
+Exp: TRUE {$$ = $1;};
+Exp: FALSE {$$ = $1;};
+Exp: NOT Exp { $$ = logicalExpression($2);};
+Exp: Exp AND Exp {$$ = logicalExpression($1,$3);};
+Exp: Exp OR Exp {$$ = logicalExpression($1,$3);};
+Exp: Exp RELOP Exp {$$ = handleRelop($1,$3);};
+Exp: Exp EQUAL Exp {$$ = handleRelop($1,$3);};
+Exp: LPAREN Type RPAREN Exp {$$ = handleCast($2->type,$4);};
 
 %%
 
@@ -107,4 +108,11 @@ void yyerror(const char*) {
 
 int main() {
 	return yyparse();
+}
+
+void handleAuto(Expression* id, Expression* exp){
+    if(exp->type=="VOID" || exp->type=="STRING"){
+        errorMismatch(yylineno);
+        exit(0);
+        }
 }
