@@ -6,10 +6,9 @@ using namespace std;
 SymbolTableEntry* MainProcess::getEntryInSymbolTable(string entry_name) {
     vector<Scope>& symbol_table = this->symbol_table;
     for (const auto& scope : symbol_table) {
-        vector<SymbolTableEntry*> current_scope = scope.scope_symbol_table;
-        for (const auto& entry : current_scope) {
-            if (entry->name == entry_name) {
-                return entry;
+        for (const auto& current_entry : scope.scope_symbol_table) {
+            if (current_entry->name == entry_name) {
+                return current_entry;
             }
         }
     }
@@ -130,8 +129,8 @@ void handleExpReturn(Expression* exp) {
 
 void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression* exp) {
     MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
-    if (entry != nullptr) {
+    SymbolTableEntry* entry_of_id = process.getEntryInSymbolTable(id->name);
+    if (entry_of_id != nullptr) {
         output::errorDef(yylineno, id->name);
         exit(1);
     }
@@ -152,15 +151,15 @@ void handleDeclaration(Expression* id) {
 }
 
 void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Expression* args) {
-    MainProcess& process = MainProcess::get_instance();
     SymbolTableEntryFunction* function_entry;
+    MainProcess& process = MainProcess::get_instance();
     if (args != nullptr) {
         ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
         reverse(args_list->arguments_names.begin(), args_list->arguments_names.end());
         reverse(args_list->arguments_types.begin(), args_list->arguments_types.end());
         function_entry = new SymbolTableEntryFunction(id->name, ret_type->type, args_list->arguments_names, args_list->arguments_types);
     }
-    else {
+    if (args == nullptr) {
         function_entry = new SymbolTableEntryFunction(id->name, ret_type->type);
     }
     process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(function_entry);
@@ -190,6 +189,7 @@ void addVariableToSymbolTable(Expression* type, Expression* id) {
 }
 void checkIfMainExists() {
     MainProcess& process = MainProcess::get_instance();
+    SymbolTableEntryFunction* main_fun_entry;
     SymbolTableEntry* main_entry = process.getEntryInSymbolTable("main");
     if (main_entry == nullptr) {
         output::errorMainMissing();
@@ -199,8 +199,7 @@ void checkIfMainExists() {
         output::errorMainMissing();
         exit(1);
     }
-    SymbolTableEntryFunction* main_fun_entry = dynamic_cast<class SymbolTableEntryFunction*>(main_entry);
-    if (main_fun_entry->arguments_names.size()!=0) {
+    if (dynamic_cast<class SymbolTableEntryFunction*>(main_entry)->arguments_names.size()!=0) {
         output::errorMainMissing();
         exit(1);
     }
