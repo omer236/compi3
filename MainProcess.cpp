@@ -19,17 +19,17 @@ SymbolTableEntry* MainProcess::getEntryInSymbolTable(string entry_name) {
 void createGlobalScope() {
     MainProcess& process = MainProcess::get_instance();
 	Scope global_scope;
-	vector<string> print_args_name;
-	print_args_name.push_back("print_arg_string");
-	vector<string> print_args_type;
-	print_args_type.push_back("STRING");
-	global_scope.addFuncToScope("print", "VOID", print_args_name, print_args_type);
+	vector<string> print_arguments_names;
+    print_arguments_names.push_back("print_arg_string");
+	vector<string> print_arguments_types;
+    print_arguments_types.push_back("STRING");
+	global_scope.addFuncToScope("print", "VOID", print_arguments_names, print_arguments_types);
 
-	vector<string> printi_args_name;
-	print_args_name.push_back("printi_arg_string");
-	vector<string> printi_args_type;
-	printi_args_type.push_back("INT");
-	global_scope.addFuncToScope("printi", "VOID", printi_args_name, printi_args_type);
+	vector<string> printi_arguments_names;
+    printi_arguments_names.push_back("printi_arg_string");
+	vector<string> printi_arguments_types;
+    printi_arguments_types.push_back("INT");
+	global_scope.addFuncToScope("printi", "VOID", printi_arguments_names, printi_arguments_types);
 
     process.offset_stack.push(0);
     process.symbol_table.push_back(global_scope);
@@ -47,9 +47,9 @@ void closeScope() {
     MainProcess& process = MainProcess::get_instance();
 	vector<SymbolTableEntry*> scope_symbol_table = process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table;
 	for (auto const& sybmol_table_entry : scope_symbol_table) {
-		if (sybmol_table_entry->is_func) {
+		if (sybmol_table_entry->is_function) {
 			SymbolTableEntryFunction* function = dynamic_cast<class SymbolTableEntryFunction*>(sybmol_table_entry);
-			output::printID(function->name, 0, output::makeFunctionType(function->type, function->args_type));
+			output::printID(function->name, 0, output::makeFunctionType(function->type, function->arguments_types));
 		}
 		else {
 			output::printID(sybmol_table_entry->name, sybmol_table_entry->offset, sybmol_table_entry->type);
@@ -94,7 +94,7 @@ void handleExpReturn(Expression* exp) {
         int index_entry = process.symbol_table[j].scope_symbol_table.size() - 1;
         for (int i = index_entry; i >= 0; i--)
         {
-            if (process.symbol_table[j].scope_symbol_table[i]->is_func)
+            if (process.symbol_table[j].scope_symbol_table[i]->is_function)
             {
                 result = process.symbol_table[j].scope_symbol_table[i]->type;
                 break;
@@ -121,7 +121,7 @@ void handleAssign(Expression* id, Expression* exp) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
 	}
-	if (entry->is_func) {
+	if (entry->is_function) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
 	}
@@ -168,7 +168,7 @@ void checkIfMainExists() {
 		exit(1);
 	}
 	SymbolTableEntryFunction* main_fun_entry = dynamic_cast<class SymbolTableEntryFunction*>(main_entry);
-	if (!(main_fun_entry->args_name.empty())) {
+	if (!(main_fun_entry->arguments_names.empty())) {
 		output::errorMainMissing();
 		exit(1);
 	}
@@ -179,10 +179,10 @@ void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Express
 	SymbolTableEntryFunction* function_entry;
 	if (args != nullptr) {
 		ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-		reverse(args_list->args_name.begin(), args_list->args_name.end());
-		reverse(args_list->args_type.begin(), args_list->args_type.end());
+		reverse(args_list->arguments_names.begin(), args_list->arguments_names.end());
+		reverse(args_list->arguments_types.begin(), args_list->arguments_types.end());
 
-		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type, args_list->args_name, args_list->args_type);
+		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type, args_list->arguments_names, args_list->arguments_types);
 	}
 	else {
 		function_entry = new SymbolTableEntryFunction(id->name, ret_type->type);
@@ -195,9 +195,9 @@ void addArgumentsToSymbolTable(Expression* args) {
         MainProcess& process = MainProcess::get_instance();
 		ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
 		int offset = -1;
-		int num_of_args = args_list->args_name.size();
+		int num_of_args = args_list->arguments_names.size();
 		for (int i = 0; i < num_of_args; i++) {
-			SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->args_name[i], args_list->args_type[i], offset, false);
+			SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->arguments_names[i], args_list->arguments_types[i], offset, false);
             process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(current_entry);
 			offset--;
 		}

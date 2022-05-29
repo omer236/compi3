@@ -99,36 +99,36 @@ void handleCall(Expression* id, Expression* args) {
 		output::errorUndefFunc(yylineno, id->name);
 		exit(1);
 	}
-	else if (!entry->is_func) {
+	else if (!entry->is_function) {
 		output::errorUndefFunc(yylineno, id->name);
 		exit(1);
 	}
 	SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(entry);
-	int number_of_args = function_entry->args_type.size();
+	int number_of_args = function_entry->arguments_types.size();
 	if (args != nullptr) {
 		ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-		if (args_list->args_name.size() != number_of_args) {
-			output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->args_type);
+		if (args_list->arguments_names.size() != number_of_args) {
+			output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
 			exit(1);
 		}
 
-		reverse(args_list->args_name.begin(), args_list->args_name.end());
-		reverse(args_list->args_type.begin(), args_list->args_type.end());
+		reverse(args_list->arguments_names.begin(), args_list->arguments_names.end());
+		reverse(args_list->arguments_types.begin(), args_list->arguments_types.end());
 
 		for (int i = 0; i < number_of_args; i++) {
-			if (function_entry->args_type[i] != args_list->args_type[i])
+			if (function_entry->arguments_types[i] != args_list->arguments_types[i])
             {
-			    if((function_entry->args_type[i] == "INT") && (args_list->args_type[i] == "BYTE"))
+			    if((function_entry->arguments_types[i] == "INT") && (args_list->arguments_types[i] == "BYTE"))
                 {
                     continue;
                 }
-                output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->args_type);
+                output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
                 exit(1);
             }
 		}
 	}
 	if (args == nullptr && number_of_args != 0) {
-		output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->args_type);
+		output::errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
 		exit(1);
 	}
 }
@@ -140,7 +140,7 @@ void checkID(Expression* id) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
 	}
-	if (entry->is_func) {
+	if (entry->is_function) {
 		output::errorUndef(yylineno, id->name);
 		exit(1);
 	}
@@ -159,20 +159,20 @@ void checkIfFuncAlreadyInSymbolTable(Expression* id) {
 void addArgToFunction(Expression* exp, Expression* arg)
 {
 	ExpressionFunction* function_entry = dynamic_cast<class ExpressionFunction*>(exp);
-	function_entry->args_name.push_back(arg->name);
+	function_entry->arguments_names.push_back(arg->name);
 	string type = getExpType(arg);
-	function_entry->args_type.push_back(type);
+	function_entry->arguments_types.push_back(type);
 }
 
 void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
 
 	ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
 
-	if (find(function_args_list->args_name.begin(), function_args_list->args_name.end(), new_arg->name) != function_args_list->args_name.end()) {
+	if (find(function_args_list->arguments_names.begin(), function_args_list->arguments_names.end(), new_arg->name) != function_args_list->arguments_names.end()) {
 		output::errorDef(yylineno, new_arg->name);
 		exit(0);
 	}
-	function_args_list->args_type.push_back(new_arg->type);
-	function_args_list->args_name.push_back(new_arg->name);
+	function_args_list->arguments_types.push_back(new_arg->type);
+	function_args_list->arguments_names.push_back(new_arg->name);
 }
 

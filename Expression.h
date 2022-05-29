@@ -14,10 +14,10 @@ class Expression {
 public:
 	string name;
 	string type;
-	bool is_func = false;
+	bool is_function = false;
 	Expression() = default;
-	Expression(const string name, const string type): name(name), type(type), is_func(false) {}
-	Expression(const string name, const string type, bool is_func): name(name), type(type), is_func(is_func) {}
+	Expression(const string name, const string type): name(name), type(type), is_function(false) {}
+	Expression(const string name, const string type, bool is_func): name(name), type(type), is_function(is_func) {}
 	virtual ~Expression() = default;
 };
 
@@ -40,18 +40,18 @@ string getExpType(Expression* exp);
 
 class ExpressionFunction : public Expression {
 public:
-	vector<string> args_name;
-	vector<string> args_type;
+	vector<string> arguments_names;
+	vector<string> arguments_types;
 	ExpressionFunction() = default;
 	ExpressionFunction(string arg_name, string arg_type) {
-		args_name.push_back(arg_name);
-		args_type.push_back(arg_type);
+        arguments_names.push_back(arg_name);
+        arguments_types.push_back(arg_type);
 	}
-	ExpressionFunction(const string name, const string type, bool is_func): Expression(name, type, is_func), args_name(), args_type(){}
+	ExpressionFunction(const string name, const string type, bool is_func): Expression(name, type, is_func), arguments_names(), arguments_types(){}
 	ExpressionFunction(Expression* exp) : Expression() {
-		args_name.push_back(exp->name);
+        arguments_names.push_back(exp->name);
 		string type = getExpType(exp);
-		args_type.push_back(type);
+        arguments_types.push_back(type);
 	}
 	~ExpressionFunction() override = default;
 };
