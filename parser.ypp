@@ -55,7 +55,7 @@ Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {c
 			| Type ID SC {handleDeclaration($2); addVariableToSymbolTable($1, $2);}
 			| Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);}
 			| ID ASSIGN Exp SC {handleAssign($1, $3);}
-			| AUTO ID ASSIGN Exp SC {handleAuto($2, $4); handleDeclarationAndInitiationAuto($4, $2, $4);addVariableToSymbolTable($4, $2);}
+			| AUTO ID ASSIGN Exp SC {handleAuto($2, $4); handleDeclarationAndInitiationAuto($4, $2, $4);addVariableToSymbolTableAuto($4, $2);}
 			| Call SC {}
 			| RETURN SC {handleReturnVoid();}
 			| RETURN Exp SC {handleExpReturn($2);}

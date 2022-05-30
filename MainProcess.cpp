@@ -210,6 +210,17 @@ void addVariableToSymbolTable(Expression* type, Expression* id) {
     process.offset_stack.push(offset_new);
     process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(var_entry);
 }
+
+void addVariableToSymbolTableAuto(Expression* type, Expression* id) {
+    int offset_new;
+    MainProcess& process = MainProcess::get_instance();
+    string exp_type = getExpType(type);
+    SymbolTableEntry* var_entry = new SymbolTableEntry(id->name, exp_type, process.offset_stack.top(), false);
+    offset_new = process.offset_stack.top() + 1;
+    process.offset_stack.pop();
+    process.offset_stack.push(offset_new);
+    process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(var_entry);
+}
 void checkIfMainExists() {
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* main_entry = process.getEntryInSymbolTable("main");

@@ -73,7 +73,6 @@ Expression* handleBinop(Expression* exp1, Expression* exp2) {
 }
 
 Expression* handleCast(string cast_type, Expression* expression) {
-    cout << expression->name;
     if (cast_type == "BYTE") {
         checkByteSize(stoi(expression->name));
     }
