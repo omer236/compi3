@@ -21,9 +21,7 @@ public:
 };
 
 void createGlobalScope();
-void openScope(bool is_while = false);
 void handleReturnVoid();
-void closeScope();
 void handleAssign(Expression* id, Expression* exp);
 void checkBreakOrContinue(string flag);
 void handleExpReturn(Expression* exp);

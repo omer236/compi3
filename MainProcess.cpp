@@ -35,13 +35,6 @@ void createGlobalScope() {
     process.offset_stack.push(0);
     process.symbol_table.push_back(global);
 }
-
-void openScope(bool if_while) {
-    MainProcess& process = MainProcess::get_instance();
-    Scope scope(if_while);
-    process.symbol_table.push_back(scope);
-    process.offset_stack.push(process.offset_stack.top());
-}
 void handleReturnVoid() {
     MainProcess& process = MainProcess::get_instance();
     vector <SymbolTableEntry*> function_definition = process.symbol_table[process.symbol_table.size() - 2].scope_symbol_table;
@@ -50,24 +43,6 @@ void handleReturnVoid() {
         return;
     }
     errorMismatch();
-}
-void closeScope() {
-    endScope();
-    MainProcess& process = MainProcess::get_instance();
-    vector<SymbolTableEntry*> current_scope_st = process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table;
-    for (auto const& sybmol_table_entry : current_scope_st) {
-        if (sybmol_table_entry->is_function) {
-            SymbolTableEntryFunction* function = dynamic_cast<class SymbolTableEntryFunction*>(sybmol_table_entry);
-            printID(function->name, 0, makeFunctionType(function->type, function->arguments_types));
-        }
-    }
-    for (auto const& sybmol_table_entry : current_scope_st) {
-        if (!sybmol_table_entry->is_function) {
-            printID(sybmol_table_entry->name, sybmol_table_entry->offset, sybmol_table_entry->type);
-        }
-    }
-    process.offset_stack.pop();
-    process.symbol_table.pop_back();
 }
 void handleAssign(Expression* id, Expression* exp) {
     MainProcess& process = MainProcess::get_instance();

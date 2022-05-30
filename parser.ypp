@@ -7,6 +7,8 @@
 	int yylex();
 	using namespace output;
 	void handleAuto(Expression* id, Expression* exp);
+	void openScope(bool is_while = false);
+	void closeScope();
 	#define YYSTYPE Expression*
 %}
 
@@ -51,19 +53,19 @@ FormalDecl: Type ID {$$ = new Expression($2->name, $1->type);}
 Statements: Statement {}
 			| Statements Statement  {}
 
-Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {closeScope();}
-			| Type ID SC {handleDeclaration($2); addVariableToSymbolTable($1, $2);}
-			| Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);}
-			| ID ASSIGN Exp SC {handleAssign($1, $3);}
-			| AUTO ID ASSIGN Exp SC {handleAuto($2, $4); handleDeclarationAndInitiationAuto($4, $2, $4);addVariableToSymbolTableAuto($4, $2);}
-			| Call SC {}
-			| RETURN SC {handleReturnVoid();}
-			| RETURN Exp SC {handleExpReturn($2);}
-			| IF LPAREN M1 Exp M2 RPAREN Statement M3 %prec IF {}
-			| IF LPAREN M1 Exp M2 RPAREN Statement M3 ELSE {openScope();} Statement {closeScope();}
-			| WHILE {openScope(1);} LPAREN Exp {logicalExpression($4);} RPAREN Statement {closeScope();}
-			| BREAK SC {checkBreakOrContinue("BREAK");}
-			| CONTINUE SC {checkBreakOrContinue("CONTINUE");}
+Statement: LBRACE {bool flag = isWhile(); openScope(flag);} Statements RBRACE {closeScope();};
+Statement: Type ID SC {handleDeclaration($2); addVariableToSymbolTable($1, $2);};
+Statement: Type ID ASSIGN Exp SC {handleDeclarationAndInitiation($1, $2, $4); addVariableToSymbolTable($1, $2);};
+Statement: ID ASSIGN Exp SC {handleAssign($1, $3);};
+Statement: AUTO ID ASSIGN Exp SC {handleAuto($2, $4); handleDeclarationAndInitiationAuto($4, $2, $4);addVariableToSymbolTableAuto($4, $2);};
+Statement: Call SC {};
+Statement: RETURN SC {handleReturnVoid();};
+Statement: RETURN Exp SC {handleExpReturn($2);};
+Statement: IF LPAREN M1 Exp M2 RPAREN Statement M3 %prec IF {};
+Statement: IF LPAREN M1 Exp M2 RPAREN Statement M3 ELSE {openScope();} Statement {closeScope();};
+Statement: WHILE {openScope(1);} LPAREN Exp {logicalExpression($4);} RPAREN Statement {closeScope();};
+Statement: BREAK SC {checkBreakOrContinue("BREAK");};
+Statement: CONTINUE SC {checkBreakOrContinue("CONTINUE");};
 
 M1: /*Epsilon*/ {bool flag = isWhile(); openScope(flag);}
 
@@ -115,4 +117,30 @@ void handleAuto(Expression* id, Expression* exp){
         errorMismatch(yylineno);
         exit(0);
         }
+}
+
+void openScope(bool if_while) {
+    MainProcess& process = MainProcess::get_instance();
+    Scope scope(if_while);
+    process.symbol_table.push_back(scope);
+    process.offset_stack.push(process.offset_stack.top());
+}
+
+void closeScope() {
+    endScope();
+    MainProcess& process = MainProcess::get_instance();
+    vector<SymbolTableEntry*> current_scope_st = process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table;
+    for (auto const& sybmol_table_entry : current_scope_st) {
+        if (sybmol_table_entry->is_function) {
+            SymbolTableEntryFunction* function = dynamic_cast<class SymbolTableEntryFunction*>(sybmol_table_entry);
+            printID(function->name, 0, makeFunctionType(function->type, function->arguments_types));
+        }
+    }
+    for (auto const& sybmol_table_entry : current_scope_st) {
+        if (!sybmol_table_entry->is_function) {
+            printID(sybmol_table_entry->name, sybmol_table_entry->offset, sybmol_table_entry->type);
+        }
+    }
+    process.offset_stack.pop();
+    process.symbol_table.pop_back();
 }
