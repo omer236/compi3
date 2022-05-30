@@ -18,19 +18,19 @@ SymbolTableEntry* MainProcess::getEntryInSymbolTable(string entry_name) {
 
 void createGlobalScope() {
     MainProcess& process = MainProcess::get_instance();
-    Scope global_scope;
-    vector<string> print_arguments_names;
-    print_arguments_names.push_back("print_arg_string");
-    vector<string> print_arguments_types;
-    print_arguments_types.push_back("STRING");
-    global_scope.addFuncToScope("print", "VOID", print_arguments_names, print_arguments_types);
-    vector<string> printi_arguments_names;
-    printi_arguments_names.push_back("printi_arg_string");
-    vector<string> printi_arguments_types;
-    printi_arguments_types.push_back("INT");
-    global_scope.addFuncToScope("printi", "VOID", printi_arguments_names, printi_arguments_types);
+    Scope global;
+    vector<string> print_args;
+    print_args.push_back("print_arg_string");
+    vector<string> types_ptint;
+    types_ptint.push_back("STRING");
+    global.addFuncToScope("print", "VOID", print_args, types_ptint);
+    vector<string> printi_args;
+    printi_args.push_back("printi_arg_string");
+    vector<string> types_printi;
+    types_printi.push_back("INT");
+    global.addFuncToScope("printi", "VOID", printi_args, types_printi);
     process.offset_stack.push(0);
-    process.symbol_table.push_back(global_scope);
+    process.symbol_table.push_back(global);
 }
 
 void openScope(bool if_while) {
@@ -52,14 +52,14 @@ void handleReturnVoid() {
 void closeScope() {
     endScope();
     MainProcess& process = MainProcess::get_instance();
-    vector<SymbolTableEntry*> scope_symbol_table = process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table;
-    for (auto const& sybmol_table_entry : scope_symbol_table) {
+    vector<SymbolTableEntry*> current_scope_st = process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table;
+    for (auto const& sybmol_table_entry : current_scope_st) {
         if (sybmol_table_entry->is_function) {
             SymbolTableEntryFunction* function = dynamic_cast<class SymbolTableEntryFunction*>(sybmol_table_entry);
             printID(function->name, 0, makeFunctionType(function->type, function->arguments_types));
         }
     }
-    for (auto const& sybmol_table_entry : scope_symbol_table) {
+    for (auto const& sybmol_table_entry : current_scope_st) {
         if (!sybmol_table_entry->is_function) {
             printID(sybmol_table_entry->name, sybmol_table_entry->offset, sybmol_table_entry->type);
         }
