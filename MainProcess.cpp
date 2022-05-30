@@ -5,9 +5,9 @@ using namespace std;
 using namespace output;
 
 SymbolTableEntry* MainProcess::getEntryInSymbolTable(string entry_name) {
-    vector<Scope>& symbol_table = this->symbol_table;
-    for (const auto& scope : symbol_table) {
-        for (const auto& current_entry : scope.scope_symbol_table) {
+    vector<Scope>& st = this->symbol_table;
+    for (const auto& current_scope : st) {
+        for (const auto& current_entry : current_scope.scope_symbol_table) {
             if (current_entry->name == entry_name) {
                 return current_entry;
             }
@@ -15,7 +15,10 @@ SymbolTableEntry* MainProcess::getEntryInSymbolTable(string entry_name) {
     }
     return nullptr;
 }
-
+void errorMismatch(){
+    errorMismatch(yylineno);
+    exit(1);
+}
 void createGlobalScope() {
     MainProcess& process = MainProcess::get_instance();
     Scope global;
@@ -46,8 +49,7 @@ void handleReturnVoid() {
     if (entry->type == "VOID") {
         return;
     }
-    errorMismatch(yylineno);
-    exit(1);
+    errorMismatch();
 }
 void closeScope() {
     endScope();
@@ -94,8 +96,7 @@ void handleAssign(Expression* id, Expression* exp) {
         exit(1);
     }
     else if ((entry_of_id->type != "INT" || exp_type != "BYTE")&&(entry_of_id->type != exp_type)) {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
 }
 
@@ -118,13 +119,11 @@ void handleExpReturn(Expression* exp) {
         j--;
     }
     if (function_type == "VOID") {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
     string exp_type = getExpType(exp);
     if ((function_type != exp_type)&&(function_type != "INT" || exp_type != "BYTE")) {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
 }
 
@@ -136,14 +135,12 @@ void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression
         exit(1);
     }
     string exp_type = getExpType(exp);
-    if ((type->type != exp_type) && (type->type != "INT" || exp_type != "BYTE")) {
-        errorMismatch(yylineno);
-        exit(1);
+    if ((type->type != "INT" || exp_type != "BYTE")&&(type->type != exp_type)) {
+        errorMismatch();
     }
 }
 void handleDeclarationAndInitiationAuto(Expression* type, Expression* id, Expression* exp) {
     //cout << "type->type: " << type->type << endl;
-
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* entry_of_id = process.getEntryInSymbolTable(id->name);
     if (entry_of_id != nullptr) {
@@ -154,8 +151,7 @@ void handleDeclarationAndInitiationAuto(Expression* type, Expression* id, Expres
     //cout << "exp_type: " << exp_type << endl;
     if(exp_type == "VOID" || exp_type == "STRING")
     {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
     /*if ((type->type != exp_type) && (type->type != "INT" || exp_type != "BYTE")) {
         errorMismatch(yylineno);
@@ -192,9 +188,11 @@ void addArgumentsToSymbolTable(Expression* args) {
         return;
     MainProcess& process = MainProcess::get_instance();
     ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-    for (int i = 0; i < args_list->arguments_names.size(); i++) {
+    int i = 0;
+    while ( i < args_list->arguments_names.size()) {
         SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->arguments_names[i], args_list->arguments_types[i], -1+i*-1, false);
         process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(current_entry);
+        i++;
     }
 }
 bool isWhile() {
@@ -214,26 +212,26 @@ void addVariableToSymbolTable(Expression* type, Expression* id) {
 void addVariableToSymbolTableAuto(Expression* type, Expression* id) {
     int offset_new;
     MainProcess& process = MainProcess::get_instance();
-    string exp_type = getExpType(type);
-    SymbolTableEntry* var_entry = new SymbolTableEntry(id->name, exp_type, process.offset_stack.top(), false);
+    SymbolTableEntry* var_entry = new SymbolTableEntry(id->name,getExpType(type), process.offset_stack.top(), false);
     offset_new = process.offset_stack.top() + 1;
     process.offset_stack.pop();
     process.offset_stack.push(offset_new);
     process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(var_entry);
 }
+void mainMissing(){
+    errorMainMissing();
+    exit(1);
+}
 void checkIfMainExists() {
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* main_entry = process.getEntryInSymbolTable("main");
     if (main_entry == nullptr) {
-        errorMainMissing();
-        exit(1);
+        mainMissing();
     }
     else if (main_entry->type != "VOID") {
-        errorMainMissing();
-        exit(1);
+        mainMissing();
     }
-    else if (dynamic_cast<class SymbolTableEntryFunction*>(main_entry)->arguments_names.size()!=0) {
-        errorMainMissing();
-        exit(1);
+    else if (!dynamic_cast<class SymbolTableEntryFunction*>(main_entry)->arguments_names.size()==0) {
+        mainMissing();
     }
 }
