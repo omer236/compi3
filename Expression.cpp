@@ -35,23 +35,6 @@ Expression* logicalExpression(Expression* exp1, Expression* exp2) {
     }
     return new Expression("", "BOOL");
 }
-void checkByteSize(int size) {
-    if (size < 256) {
-        return;
-    }
-    errorByteTooLarge(yylineno, to_string(size));
-    exit(1);
-}
-
-void checkIfFuncAlreadyInSymbolTable(Expression* id) {
-    SymbolTableEntry* current_entry = MainProcess::get_instance().getEntryInSymbolTable(id->name);
-    if (current_entry == nullptr) {
-        return;
-    }
-    errorDef(yylineno, id->name);
-    exit(1);
-}
-
 Expression* handleBinop(Expression* exp1, Expression* exp2) {
     string expression_type = getExpType(exp1);
     string expression_type1 = getExpType(exp2);
@@ -96,7 +79,38 @@ Expression* handleByte(Expression* expression) {
     errorByteTooLarge(yylineno, expression->name);
     exit(1);
 }
+void checkByteSize(int size) {
+    if (size < 256) {
+        return;
+    }
+    errorByteTooLarge(yylineno, to_string(size));
+    exit(1);
+}
 
+void checkIfFuncAlreadyInSymbolTable(Expression* id) {
+    SymbolTableEntry* current_entry = MainProcess::get_instance().getEntryInSymbolTable(id->name);
+    if (current_entry == nullptr) {
+        return;
+    }
+    errorDef(yylineno, id->name);
+    exit(1);
+}
+void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
+    ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
+    if (find(function_args_list->arguments_names.begin(), function_args_list->arguments_names.end(), new_arg->name) != function_args_list->arguments_names.end()) {
+        errorDef(yylineno, new_arg->name);
+        exit(0);
+    }
+    function_args_list->arguments_types.push_back(new_arg->type);
+    function_args_list->arguments_names.push_back(new_arg->name);
+}
+
+void addArgToFunction(Expression* expression, Expression* arguments)
+{
+    ExpressionFunction* entry = dynamic_cast<class ExpressionFunction*>(expression);
+    entry->arguments_names.push_back(arguments->name);
+    entry->arguments_types.push_back(getExpType(arguments));
+}
 void handleCall(Expression* id, Expression* args) {
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
@@ -146,22 +160,6 @@ void checkID(Expression* id) {
     }
 }
 
-void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
-    ExpressionFunction* function_args_list = dynamic_cast<class ExpressionFunction*>(args_list);
-    if (find(function_args_list->arguments_names.begin(), function_args_list->arguments_names.end(), new_arg->name) != function_args_list->arguments_names.end()) {
-        errorDef(yylineno, new_arg->name);
-        exit(0);
-    }
-    function_args_list->arguments_types.push_back(new_arg->type);
-    function_args_list->arguments_names.push_back(new_arg->name);
-}
 
-void addArgToFunction(Expression* exp, Expression* arg)
-{
-    ExpressionFunction* function_entry = dynamic_cast<class ExpressionFunction*>(exp);
-    function_entry->arguments_names.push_back(arg->name);
-    string type = getExpType(arg);
-    function_entry->arguments_types.push_back(type);
-}
 
 
