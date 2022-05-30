@@ -69,20 +69,6 @@ void closeScope() {
     process.offset_stack.pop();
     process.symbol_table.pop_back();
 }
-
-void checkBreakOrContinue(string flag) {
-    MainProcess& process = MainProcess::get_instance();
-    Scope current = process.symbol_table[process.symbol_table.size() - 1];
-    if (!current.is_while_scope&&flag == "BREAK") {
-        errorUnexpectedBreak(yylineno);
-        exit(1);
-    }
-    else if (!current.is_while_scope && flag == "CONTINUE"){
-        errorUnexpectedContinue(yylineno);
-        exit(1);
-    }
-}
-
 void handleAssign(Expression* id, Expression* exp) {
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* entry_of_id = process.getEntryInSymbolTable(id->name);
@@ -99,6 +85,20 @@ void handleAssign(Expression* id, Expression* exp) {
         errorMismatch();
     }
 }
+void checkBreakOrContinue(string flag) {
+    MainProcess& process = MainProcess::get_instance();
+    Scope current = process.symbol_table[process.symbol_table.size() - 1];
+    if (!current.is_while_scope&&flag == "BREAK") {
+        errorUnexpectedBreak(yylineno);
+        exit(1);
+    }
+    else if (!current.is_while_scope && flag == "CONTINUE"){
+        errorUnexpectedContinue(yylineno);
+        exit(1);
+    }
+}
+
+
 
 void handleExpReturn(Expression* exp) {
     string function_type = "temp";
@@ -158,6 +158,18 @@ void handleDeclarationAndInitiationAuto(Expression* type, Expression* id, Expres
         exit(1);
     }*/
 }
+void addArgumentsToSymbolTable(Expression* args) {
+    if (args == nullptr)
+        return;
+    MainProcess& process = MainProcess::get_instance();
+    ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
+    int i = 0;
+    while ( i < args_list->arguments_names.size()) {
+        SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->arguments_names[i], args_list->arguments_types[i], -1+i*-1, false);
+        process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(current_entry);
+        i++;
+    }
+}
 void handleDeclaration(Expression* id) {
     MainProcess& process = MainProcess::get_instance();
     SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
@@ -183,18 +195,6 @@ void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Express
     process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(function_entry);
 }
 
-void addArgumentsToSymbolTable(Expression* args) {
-    if (args == nullptr)
-        return;
-    MainProcess& process = MainProcess::get_instance();
-    ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-    int i = 0;
-    while ( i < args_list->arguments_names.size()) {
-        SymbolTableEntry* current_entry = new SymbolTableEntry(args_list->arguments_names[i], args_list->arguments_types[i], -1+i*-1, false);
-        process.symbol_table[process.symbol_table.size() - 1].scope_symbol_table.push_back(current_entry);
-        i++;
-    }
-}
 bool isWhile() {
     MainProcess& process = MainProcess::get_instance();
     return process.symbol_table.back().is_while_scope;
