@@ -6,12 +6,9 @@ using namespace output;
 
 void errorMismatch();
 
-
-
 void checkIfBoolBin(Expression* exp1, Expression* exp2) {
-    if(!(getExpType(exp2) == "BOOL" && getExpType(exp1) == "BOOL")) {
+    if(!(getExpType(exp2) == "BOOL" && getExpType(exp1) == "BOOL"))
         errorMismatch();
-    }
 }
 Expression* logicalExpression(Expression* expression1, Expression* expression2) {
     Expression* exp_bool=new Expression("", "BOOL");
@@ -52,7 +49,7 @@ Expression* handleCast(string type, Expression* expression) {
 Expression* handleRelop(Expression* expression1, Expression* expression2) {
     string expression_type = getExpType(expression1);
     string expression_type1 = getExpType(expression2);
-    if ((expression_type == "INT" || expression_type == "BYTE") && (expression_type1 == "BYTE"||expression_type1 == "INT" )) {
+    if ((expression_type == "BYTE" || expression_type == "INT") && (expression_type1 == "BYTE"||expression_type1 == "INT" )) {
         return new Expression("", "BOOL");
     }
     else {
@@ -126,38 +123,37 @@ void checkID(Expression* id) {
     }
 }
 void handleCall(Expression* id, Expression* args) {
-    MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
-    if (entry == nullptr) {
+    SymbolTableEntry* entry = MainProcess::get_instance().getEntryInSymbolTable(id->name);
+    SymbolTableEntryFunction* entry_func = dynamic_cast<class SymbolTableEntryFunction*>(entry);
+
+    if (entry != nullptr && entry->is_function== false) {
         errorUndefFunc(yylineno, id->name);
         exit(1);
     }
-    else if (entry->is_function== false) {
+    else if (entry == nullptr) {
         errorUndefFunc(yylineno, id->name);
         exit(1);
     }
-    SymbolTableEntryFunction* function_entry = dynamic_cast<class SymbolTableEntryFunction*>(entry);
-    int num_arguments = function_entry->arguments_types.size();
-    if (args != nullptr) {
+    int num_arguments = entry_func->arguments_types.size();
+    if (args == nullptr&&!(num_arguments == 0)) {
+        errorPrototypeMismatch(yylineno, entry_func->name, entry_func->arguments_types);
+        exit(1);
+    }
+    else if (args != nullptr) {
         ExpressionFunction* args_list = dynamic_cast<class ExpressionFunction*>(args);
-        if (args_list->arguments_names.size() != num_arguments) {
-            errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
-            exit(1);
-        }
         reverse(args_list->arguments_names.begin(), args_list->arguments_names.end());
         reverse(args_list->arguments_types.begin(), args_list->arguments_types.end());
-
+        if (args_list->arguments_names.size() != num_arguments) {
+            errorPrototypeMismatch(yylineno, entry_func->name, entry_func->arguments_types);
+            exit(1);
+        }
         for (int i = 0; i < num_arguments; i++) {
-            if (function_entry->arguments_types[i] != args_list->arguments_types[i]&&!(((function_entry->arguments_types[i] == "INT") && (args_list->arguments_types[i] == "BYTE"))))
+            if (entry_func->arguments_types[i] != args_list->arguments_types[i]&&!(((entry_func->arguments_types[i] == "INT") && (args_list->arguments_types[i] == "BYTE"))))
             {
-                errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
+                errorPrototypeMismatch(yylineno, entry_func->name, entry_func->arguments_types);
                 exit(1);
             }
         }
-    }
-    else if (!(num_arguments == 0)) {
-        errorPrototypeMismatch(yylineno, function_entry->name, function_entry->arguments_types);
-        exit(1);
     }
 }
 
