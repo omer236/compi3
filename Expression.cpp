@@ -38,9 +38,16 @@ Expression* handleBinop(Expression* expression1, Expression* expression2) {
 }
 
 Expression* handleCast(string type, Expression* expression) {
-    
-
-    return new Expression(expression->name, type);
+    string expression_type = getExpType(expression);
+    if ((type == "INT" && (expression_type == "BYTE" || expression_type == "INT"))||
+        (type == "BYTE" && (expression_type == "BYTE" || expression_type == "INT")))
+    {
+        return new Expression(expression->name, type);
+    }
+    else
+    {
+        errorMismatch();
+    }
 }
 Expression* handleRelop(Expression* expression1, Expression* expression2) {
     string expression_type = getExpType(expression1);
