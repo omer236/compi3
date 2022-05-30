@@ -4,36 +4,24 @@
 using namespace std;
 using namespace output;
 
-string getExpType(Expression* exp) {
-    if (exp->type.size()!=0) {
-        return exp->type;
-    }
-    return MainProcess::get_instance().getEntryInSymbolTable(exp->name)->type;
-}
+void errorMismatch();
 
-void checkIfBoolUn(Expression* exp) {
-    string type = getExpType(exp);
-    if (type == "BOOL") {
-        return;
-    }
-    errorMismatch(yylineno);
-    exit(1);
-}
+
 
 void checkIfBoolBin(Expression* exp1, Expression* exp2) {
-    if(!(getExpType(exp2) == "BOOL"&&getExpType(exp1) == "BOOL")) {
-        errorMismatch(yylineno);
-        exit(1);
+    if(!(getExpType(exp2) == "BOOL" && getExpType(exp1) == "BOOL")) {
+        errorMismatch();
     }
 }
 Expression* logicalExpression(Expression* expression1, Expression* expression2) {
+    Expression* exp_bool=new Expression("", "BOOL");
     if (expression2 == nullptr) {
         checkIfBoolUn(expression1);
     }
     else {
         checkIfBoolBin(expression1, expression2);
     }
-    return new Expression("", "BOOL");
+    return exp_bool;
 }
 Expression* handleBinop(Expression* expression1, Expression* expression2) {
     string expression_type = getExpType(expression1), expression_type1 = getExpType(expression2);
@@ -44,17 +32,16 @@ Expression* handleBinop(Expression* expression1, Expression* expression2) {
         return new Expression("", "BYTE");
     }
     else {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
     return nullptr;
 }
 
-Expression* handleCast(string cast_type, Expression* expression) {
-    if (cast_type == "BYTE") {
+Expression* handleCast(string type, Expression* expression) {
+    if (type == "BYTE") {
         checkByteSize(stoi(expression->name));
     }
-    return new Expression(expression->name, cast_type);
+    return new Expression(expression->name, type);
 }
 Expression* handleRelop(Expression* expression1, Expression* expression2) {
     string expression_type = getExpType(expression1);
@@ -63,8 +50,7 @@ Expression* handleRelop(Expression* expression1, Expression* expression2) {
         return new Expression("", "BOOL");
     }
     else {
-        errorMismatch(yylineno);
-        exit(1);
+        errorMismatch();
     }
     return nullptr;
 }
@@ -75,20 +61,34 @@ Expression* handleByte(Expression* expression) {
     errorByteTooLarge(yylineno, expression->name);
     exit(1);
 }
-void checkByteSize(int size) {
-    if (size < 256) {
-        return;
+string getExpType(Expression* exp) {
+    if (exp->type.size()!=0) {
+        return exp->type;
     }
-    errorByteTooLarge(yylineno, to_string(size));
-    exit(1);
+    return MainProcess::get_instance().getEntryInSymbolTable(exp->name)->type;
 }
 
+
+void checkIfBoolUn(Expression* exp) {
+    string type = getExpType(exp);
+    if (type == "BOOL") {
+        return;
+    }
+    errorMismatch();
+}
 void checkIfFuncAlreadyInSymbolTable(Expression* id) {
     SymbolTableEntry* current_entry = MainProcess::get_instance().getEntryInSymbolTable(id->name);
     if (current_entry == nullptr) {
         return;
     }
     errorDef(yylineno, id->name);
+    exit(1);
+}
+void checkByteSize(int size) {
+    if (size < 256) {
+        return;
+    }
+    errorByteTooLarge(yylineno, to_string(size));
     exit(1);
 }
 void addArgInDeclaration(Expression* args_list, Expression* new_arg) {
@@ -106,6 +106,18 @@ void addArgToFunction(Expression* expression, Expression* arguments)
     ExpressionFunction* entry = dynamic_cast<class ExpressionFunction*>(expression);
     entry->arguments_names.push_back(arguments->name);
     entry->arguments_types.push_back(getExpType(arguments));
+}
+void checkID(Expression* id) {
+    MainProcess& process = MainProcess::get_instance();
+    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
+    if (entry == nullptr) {
+        errorUndef(yylineno, id->name);
+        exit(1);
+    }
+    if (entry != nullptr && entry->is_function) {
+        errorUndef(yylineno, id->name);
+        exit(1);
+    }
 }
 void handleCall(Expression* id, Expression* args) {
     MainProcess& process = MainProcess::get_instance();
@@ -143,18 +155,7 @@ void handleCall(Expression* id, Expression* args) {
     }
 }
 
-void checkID(Expression* id) {
-    MainProcess& process = MainProcess::get_instance();
-    SymbolTableEntry* entry = process.getEntryInSymbolTable(id->name);
-    if (entry == nullptr) {
-        errorUndef(yylineno, id->name);
-        exit(1);
-    }
-    else if (entry->is_function) {
-        errorUndef(yylineno, id->name);
-        exit(1);
-    }
-}
+
 
 
 

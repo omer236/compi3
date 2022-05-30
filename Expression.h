@@ -23,19 +23,20 @@ public:
 
 #define YYSTYPE Expression*
 
-void checkIfBoolBin(Expression* exp1, Expression* exp2);
-void checkIfBoolUn(Expression* exp);
+
 Expression* logicalExpression(Expression* exp1, Expression* exp2 = nullptr);
 Expression* handleBinop(Expression* exp1, Expression* exp2);
 Expression* handleCast(string cast_type, Expression* exp);
 Expression* handleRelop(Expression* exp1, Expression* exp2);
 Expression* handleByte(Expression* exp);
+void checkIfBoolBin(Expression* exp1, Expression* exp2);
+void checkIfBoolUn(Expression* exp);
 void checkByteSize(int size);
 void checkIfFuncAlreadyInSymbolTable(Expression* id);
 void addArgInDeclaration(Expression* exp, Expression* arg);
 void addArgToFunction(Expression* exp, Expression* arg);
-void handleCall(Expression* id, Expression* args = nullptr);
 void checkID(Expression* id);
+void handleCall(Expression* id, Expression* args = nullptr);
 string getExpType(Expression* exp);
 
 class ExpressionFunction : public Expression {
