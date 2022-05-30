@@ -26,26 +26,22 @@ void checkIfBoolBin(Expression* exp1, Expression* exp2) {
         exit(1);
     }
 }
-Expression* logicalExpression(Expression* exp1, Expression* exp2) {
-    if (exp2 != nullptr) {
-        checkIfBoolBin(exp1, exp2);
+Expression* logicalExpression(Expression* expression1, Expression* expression2) {
+    if (expression2 == nullptr) {
+        checkIfBoolUn(expression1);
     }
     else {
-        checkIfBoolUn(exp1);
+        checkIfBoolBin(expression1, expression2);
     }
     return new Expression("", "BOOL");
 }
-Expression* handleBinop(Expression* exp1, Expression* exp2) {
-    string expression_type = getExpType(exp1);
-    string expression_type1 = getExpType(exp2);
-    if (expression_type == "BYTE" && expression_type1 == "BYTE") {
+Expression* handleBinop(Expression* expression1, Expression* expression2) {
+    string expression_type = getExpType(expression1), expression_type1 = getExpType(expression2);
+    if ((expression_type1 == "INT"&&expression_type == "BYTE")||(expression_type == "INT" && (expression_type1 == "BYTE" || expression_type1 == "INT"))) {
+        return new Expression("", "INT");
+    }
+    else if (expression_type1 == "BYTE" && expression_type == "BYTE") {
         return new Expression("", "BYTE");
-    }
-    else if ((expression_type == "INT") && (expression_type1 == "INT" || expression_type1 == "BYTE")) {
-        return new Expression("", "INT");
-    }
-    else if (expression_type == "BYTE" && expression_type1 == "INT") {
-        return new Expression("", "INT");
     }
     else {
         errorMismatch(yylineno);
