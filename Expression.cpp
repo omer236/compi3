@@ -38,9 +38,8 @@ Expression* handleBinop(Expression* expression1, Expression* expression2) {
 }
 
 Expression* handleCast(string type, Expression* expression) {
-    if (type == "BYTE") {
-        checkByteSize(stoi(expression->name));
-    }
+    
+
     return new Expression(expression->name, type);
 }
 Expression* handleRelop(Expression* expression1, Expression* expression2) {

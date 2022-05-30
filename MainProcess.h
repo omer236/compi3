@@ -5,7 +5,7 @@
 #include <string>
 #include <stack>
 #include "hw3_output.hpp"
-#include "SymbolTable.h"
+#include "symbol_table.h"
 
 using namespace std;
 

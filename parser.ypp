@@ -44,10 +44,10 @@ RetType: Type {$$ = $1;}
 Formals:  /*Epsilon*/ { $$ = nullptr; }
 		| FormalsList {$$=$1;}
 
-FormalsList: FormalDecl {$$ = new ExpressionFunction($1->name,$1->type);}
+FormalsList: FormalDecl {$$ = new ExpressionFunction($1->name,$1->type); delete $1;}
 			| FormalDecl COMMA FormalsList {addArgInDeclaration($3, $1); $$=$3;}
 
-FormalDecl: Type ID {$$ = new Expression($2->name, $1->type);}
+FormalDecl: Type ID {$$ = new Expression($2->name, $1->type); delete $2; delete $1;}
 
 
 Statements: Statement {}
@@ -76,7 +76,7 @@ M3: /*Epsilon*/ {closeScope();}
 Call: ID LPAREN ExpList RPAREN {handleCall($1, $3); $$ = $1;}
 			| ID LPAREN RPAREN {handleCall($1); $$ = $1;}
 
-ExpList: Exp {$$ = new ExpressionFunction($1);}
+ExpList: Exp {$$ = new ExpressionFunction($1); delete $1;}
 			| Exp COMMA ExpList {addArgToFunction($3, $1); $$=$3;}
 
 Type: INT {$$ = new Expression("", "INT");};
