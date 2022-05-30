@@ -103,26 +103,25 @@ void checkBreakOrContinue(string flag) {
 void handleExpReturn(Expression* exp) {
     string function_type = "temp";
     MainProcess& process = MainProcess::get_instance();
-    int j = process.symbol_table.size() - 2;
-    while (j >= 0)
+    int k = process.symbol_table.size() - 2;
+    while (k >= 0)
     {
-        int i = process.symbol_table[j].scope_symbol_table.size() - 1;
+        int i = process.symbol_table[k].scope_symbol_table.size() - 1;
         while ( i >= 0)
         {
-            if (process.symbol_table[j].scope_symbol_table[i]->is_function)
+            if (process.symbol_table[k].scope_symbol_table[i]->is_function)
             {
-                function_type = process.symbol_table[j].scope_symbol_table[i]->type;
+                function_type = process.symbol_table[k].scope_symbol_table[i]->type;
                 break;
             }
             i--;
         }
-        j--;
+        k--;
     }
     if (function_type == "VOID") {
         errorMismatch();
     }
-    string exp_type = getExpType(exp);
-    if ((function_type != exp_type)&&(function_type != "INT" || exp_type != "BYTE")) {
+    if ((function_type != getExpType(exp))&&(function_type != "INT" || getExpType(exp) != "BYTE")) {
         errorMismatch();
     }
 }
