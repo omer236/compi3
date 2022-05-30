@@ -28,6 +28,7 @@ void checkBreakOrContinue(string flag);
 void handleAssign(Expression* id, Expression* exp);
 void handleExpReturn(Expression* exp);
 void handleDeclarationAndInitiation(Expression* type, Expression* id, Expression* exp);
+void handleDeclarationAndInitiationAuto(Expression* type, Expression* id, Expression* exp);
 void handleDeclaration(Expression* id);
 void addFunctionEntryToSymbolTable(Expression* ret_type, Expression* id, Expression* args);
 void addArgumentsToSymbolTable(Expression* args);
